@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wex_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: wex_user
+      POSTGRES_PASSWORD: wex_password
+      POSTGRES_DB: wex_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - wex_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wex_user -d wex_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  wex_pgdata:
+    driver: local

@@ -1,0 +1,50 @@
+# ==========================================
+# STAGE 1: Build (Dependencies & Compilation)
+# ==========================================
+FROM node:20-alpine AS builder
+
+WORKDIR /usr/src/app
+
+# Copy dependency files
+COPY package*.json ./
+COPY tsconfig.build.json ./
+COPY tsconfig.json ./
+
+# Install all dependencies (including devDependencies)
+RUN npm ci
+
+# Copy source code and Prisma schema (we will add Prisma in the next step)
+COPY . .
+
+# Here we will run prisma generate (we'll uncomment this later)
+# RUN npx prisma generate
+
+# Compile the NestJS project
+RUN npm run build
+
+# ==========================================
+# STAGE 2: Production (Lightweight Final Image)
+# ==========================================
+FROM node:20-alpine AS production
+
+# Set environment to production
+ENV NODE_ENV=production
+
+WORKDIR /usr/src/app
+
+# Copy only strictly necessary files from the build stage
+COPY package*.json ./
+COPY --from=builder /usr/src/app/dist ./dist
+# COPY --from=builder /usr/src/app/prisma ./prisma
+
+# Install only production dependencies, ignoring devDependencies
+RUN npm ci --only=production
+
+# (Optional) Clean npm cache to make the image even smaller
+RUN npm cache clean --force
+
+# Expose the default NestJS port
+EXPOSE 3000
+
+# Secure startup command (no nodemon or ts-node)
+CMD ["node", "dist/main"]
