@@ -20,9 +20,9 @@ import { PurchaseNotFoundError } from '../errors/purchase-not-found.error';
 class FakePurchaseRepository implements PurchaseRepository {
   constructor(private readonly purchases: Purchase[]) {}
 
-  save(): void {}
+  async save(): Promise<void> {}
 
-  findById(id: string): Purchase | null {
+  async findById(id: string): Promise<Purchase | null> {
     return this.purchases.find((purchase) => purchase.id.value === id) ?? null;
   }
 }
@@ -58,7 +58,7 @@ function buildPurchase(): Purchase {
 }
 
 describe('GetConvertedPurchaseUseCase', () => {
-  it('should convert using the exact exchange rate date when available', () => {
+  it('should convert using the exact exchange rate date when available', async () => {
     const useCase = new GetConvertedPurchaseUseCase(
       new FakePurchaseRepository([buildPurchase()]),
       new FakeExchangeRateProvider(
@@ -71,7 +71,7 @@ describe('GetConvertedPurchaseUseCase', () => {
       new FakeClock(),
     );
 
-    const result = useCase.execute({
+    const result = await useCase.execute({
       purchaseId: '8c5ed6b1-8e1d-4c96-8dc0-6e10a05cb4c1',
       targetCurrency: 'EUR',
     });
@@ -87,7 +87,7 @@ describe('GetConvertedPurchaseUseCase', () => {
     });
   });
 
-  it('should convert using the most recent rate before the purchase date', () => {
+  it('should convert using the most recent rate before the purchase date', async () => {
     const useCase = new GetConvertedPurchaseUseCase(
       new FakePurchaseRepository([buildPurchase()]),
       new FakeExchangeRateProvider(
@@ -100,7 +100,7 @@ describe('GetConvertedPurchaseUseCase', () => {
       new FakeClock(),
     );
 
-    const result = useCase.execute({
+    const result = await useCase.execute({
       purchaseId: '8c5ed6b1-8e1d-4c96-8dc0-6e10a05cb4c1',
       targetCurrency: 'EUR',
     });
@@ -108,7 +108,7 @@ describe('GetConvertedPurchaseUseCase', () => {
     expect(result.exchangeRate).toBe('0.9100');
   });
 
-  it('should reject rates outside the six month window', () => {
+  it('should reject rates outside the six month window', async () => {
     const useCase = new GetConvertedPurchaseUseCase(
       new FakePurchaseRepository([buildPurchase()]),
       new FakeExchangeRateProvider(
@@ -118,60 +118,60 @@ describe('GetConvertedPurchaseUseCase', () => {
       new FakeClock(),
     );
 
-    expect(() =>
+    await expect(
       useCase.execute({
         purchaseId: '8c5ed6b1-8e1d-4c96-8dc0-6e10a05cb4c1',
         targetCurrency: 'EUR',
       }),
-    ).toThrow(NoValidExchangeRateError);
+    ).rejects.toThrow(NoValidExchangeRateError);
   });
 
-  it('should reject conversions when no rate exists', () => {
+  it('should reject conversions when no rate exists', async () => {
     const useCase = new GetConvertedPurchaseUseCase(
       new FakePurchaseRepository([buildPurchase()]),
       new FakeExchangeRateProvider(['EUR'], []),
       new FakeClock(),
     );
 
-    expect(() =>
+    await expect(
       useCase.execute({
         purchaseId: '8c5ed6b1-8e1d-4c96-8dc0-6e10a05cb4c1',
         targetCurrency: 'EUR',
       }),
-    ).toThrow(NoValidExchangeRateError);
+    ).rejects.toThrow(NoValidExchangeRateError);
   });
 
-  it('should reject unsupported currencies', () => {
+  it('should reject unsupported currencies', async () => {
     const useCase = new GetConvertedPurchaseUseCase(
       new FakePurchaseRepository([buildPurchase()]),
       new FakeExchangeRateProvider(['USD'], []),
       new FakeClock(),
     );
 
-    expect(() =>
+    await expect(
       useCase.execute({
         purchaseId: '8c5ed6b1-8e1d-4c96-8dc0-6e10a05cb4c1',
         targetCurrency: 'EUR',
       }),
-    ).toThrow(UnsupportedExchangeRateCurrencyError);
+    ).rejects.toThrow(UnsupportedExchangeRateCurrencyError);
   });
 
-  it('should reject unknown purchases', () => {
+  it('should reject unknown purchases', async () => {
     const useCase = new GetConvertedPurchaseUseCase(
       new FakePurchaseRepository([]),
       new FakeExchangeRateProvider(['EUR'], []),
       new FakeClock(),
     );
 
-    expect(() =>
+    await expect(
       useCase.execute({
         purchaseId: '8c5ed6b1-8e1d-4c96-8dc0-6e10a05cb4c1',
         targetCurrency: 'EUR',
       }),
-    ).toThrow(PurchaseNotFoundError);
+    ).rejects.toThrow(PurchaseNotFoundError);
   });
 
-  it('should round converted values to two decimals', () => {
+  it('should round converted values to two decimals', async () => {
     const purchase = Purchase.create({
       id: PurchaseId.create('8c5ed6b1-8e1d-4c96-8dc0-6e10a05cb4c1'),
       description: Description.create('Office supplies'),
@@ -187,7 +187,7 @@ describe('GetConvertedPurchaseUseCase', () => {
       new FakeClock(),
     );
 
-    const result = useCase.execute({
+    const result = await useCase.execute({
       purchaseId: '8c5ed6b1-8e1d-4c96-8dc0-6e10a05cb4c1',
       targetCurrency: 'EUR',
     });

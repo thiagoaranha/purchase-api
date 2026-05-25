@@ -1,0 +1,13 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "testEnvironment": "node",
+  "testRegex": ".integration-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^\\./internal/(.*)\\.js$": "<rootDir>/src/generated/prisma/internal/$1.ts",
+    "^\\./(enums|browser|client|commonInputTypes)\\.js$": "<rootDir>/src/generated/prisma/$1.ts"
+  }
+}

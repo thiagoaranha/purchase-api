@@ -24,10 +24,12 @@ export class GetConvertedPurchaseUseCase {
     private readonly clock: Clock,
   ) {}
 
-  execute(input: GetConvertedPurchaseInputDto): GetConvertedPurchaseOutputDto {
+  async execute(
+    input: GetConvertedPurchaseInputDto,
+  ): Promise<GetConvertedPurchaseOutputDto> {
     void this.clock.now();
 
-    const purchase = this.findPurchase(input.purchaseId);
+    const purchase = await this.findPurchase(input.purchaseId);
     const targetCurrency = CurrencyCode.create(input.targetCurrency);
     const exchangeRateQuote = this.selectExchangeRate(
       purchase.transactionDate.value,
@@ -47,8 +49,8 @@ export class GetConvertedPurchaseUseCase {
     };
   }
 
-  private findPurchase(purchaseId: string): Purchase {
-    const purchase = this.purchaseRepository.findById(purchaseId);
+  private async findPurchase(purchaseId: string): Promise<Purchase> {
+    const purchase = await this.purchaseRepository.findById(purchaseId);
 
     if (!purchase) {
       throw new PurchaseNotFoundError(purchaseId);

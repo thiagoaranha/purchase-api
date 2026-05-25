@@ -19,7 +19,9 @@ export class CreatePurchaseUseCase {
     private readonly clock: Clock,
   ) {}
 
-  execute(input: CreatePurchaseInputDto): CreatePurchaseOutputDto {
+  async execute(
+    input: CreatePurchaseInputDto,
+  ): Promise<CreatePurchaseOutputDto> {
     void this.clock.now();
 
     const purchase = Purchase.create({
@@ -32,7 +34,7 @@ export class CreatePurchaseUseCase {
       ),
     });
 
-    this.purchaseRepository.save(purchase);
+    await this.purchaseRepository.save(purchase);
 
     return {
       id: purchase.id.value,

@@ -33,8 +33,6 @@ describe('TransactionDate', () => {
   });
 
   it('should stringify dates', () => {
-    expect(TransactionDate.create('2026-05-23').toString()).toBe(
-      '2026-05-23',
-    );
+    expect(TransactionDate.create('2026-05-23').toString()).toBe('2026-05-23');
   });
 });
