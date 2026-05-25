@@ -1,0 +1,73 @@
+import { CreatePurchaseUseCase } from './create-purchase.use-case';
+import { Clock } from '../interfaces/clock';
+import { IdGenerator } from '../interfaces/id-generator';
+import { PurchaseRepository } from '../interfaces/purchase-repository';
+import { Purchase } from '../../domain/entities/purchase';
+
+class FakePurchaseRepository implements PurchaseRepository {
+  private readonly purchases = new Map<string, Purchase>();
+
+  save(purchase: Purchase): void {
+    this.purchases.set(purchase.id.value, purchase);
+  }
+
+  findById(id: string): Purchase | null {
+    return this.purchases.get(id) ?? null;
+  }
+}
+
+class FakeIdGenerator implements IdGenerator {
+  constructor(private readonly value: string) {}
+
+  generate(): string {
+    return this.value;
+  }
+}
+
+class FakeClock implements Clock {
+  now(): Date {
+    return new Date('2026-05-24T00:00:00.000Z');
+  }
+}
+
+describe('CreatePurchaseUseCase', () => {
+  it('should create and persist a purchase using the provided id generator', () => {
+    const repository = new FakePurchaseRepository();
+    const useCase = new CreatePurchaseUseCase(
+      repository,
+      new FakeIdGenerator('8c5ed6b1-8e1d-4c96-8dc0-6e10a05cb4c1'),
+      new FakeClock(),
+    );
+
+    const result = useCase.execute({
+      description: 'Office supplies',
+      transactionDate: '2026-05-23',
+      purchaseAmountUsd: '125.49',
+    });
+
+    expect(result).toEqual({
+      id: '8c5ed6b1-8e1d-4c96-8dc0-6e10a05cb4c1',
+      description: 'Office supplies',
+      transactionDate: '2026-05-23',
+      purchaseAmountUsd: '125.49',
+    });
+    expect(repository.findById(result.id)).not.toBeNull();
+  });
+
+  it('should round the purchase amount to cents before persisting', () => {
+    const repository = new FakePurchaseRepository();
+    const useCase = new CreatePurchaseUseCase(
+      repository,
+      new FakeIdGenerator('8c5ed6b1-8e1d-4c96-8dc0-6e10a05cb4c1'),
+      new FakeClock(),
+    );
+
+    const result = useCase.execute({
+      description: 'Office supplies',
+      transactionDate: '2026-05-23',
+      purchaseAmountUsd: '125.495',
+    });
+
+    expect(result.purchaseAmountUsd).toBe('125.50');
+  });
+});
