@@ -36,7 +36,6 @@ COPY --from=builder /usr/src/app/package.json ./
 COPY --from=builder /usr/src/app/pnpm-lock.yaml ./
 COPY --from=builder /usr/src/app/.npmrc ./
 COPY --from=builder /usr/src/app/dist ./dist
-
 # Install only production dependencies
 RUN pnpm install --prod --frozen-lockfile
 

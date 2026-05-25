@@ -1,0 +1,21 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  moduleFormat    = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Purchase {
+  id                String   @id @db.Uuid
+  description       String   @db.VarChar(50)
+  transactionDate   DateTime @db.Date @map("transaction_date")
+  purchaseAmountUsd Decimal  @db.Decimal(18, 2) @map("purchase_amount_usd")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("purchases")
+}

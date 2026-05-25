@@ -1,3 +1,4 @@
+import './shared/config/env';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 

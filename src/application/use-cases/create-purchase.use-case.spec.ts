@@ -7,11 +7,11 @@ import { Purchase } from '../../domain/entities/purchase';
 class FakePurchaseRepository implements PurchaseRepository {
   private readonly purchases = new Map<string, Purchase>();
 
-  save(purchase: Purchase): void {
+  async save(purchase: Purchase): Promise<void> {
     this.purchases.set(purchase.id.value, purchase);
   }
 
-  findById(id: string): Purchase | null {
+  async findById(id: string): Promise<Purchase | null> {
     return this.purchases.get(id) ?? null;
   }
 }
@@ -31,7 +31,7 @@ class FakeClock implements Clock {
 }
 
 describe('CreatePurchaseUseCase', () => {
-  it('should create and persist a purchase using the provided id generator', () => {
+  it('should create and persist a purchase using the provided id generator', async () => {
     const repository = new FakePurchaseRepository();
     const useCase = new CreatePurchaseUseCase(
       repository,
@@ -39,7 +39,7 @@ describe('CreatePurchaseUseCase', () => {
       new FakeClock(),
     );
 
-    const result = useCase.execute({
+    const result = await useCase.execute({
       description: 'Office supplies',
       transactionDate: '2026-05-23',
       purchaseAmountUsd: '125.49',
@@ -51,10 +51,10 @@ describe('CreatePurchaseUseCase', () => {
       transactionDate: '2026-05-23',
       purchaseAmountUsd: '125.49',
     });
-    expect(repository.findById(result.id)).not.toBeNull();
+    await expect(repository.findById(result.id)).resolves.not.toBeNull();
   });
 
-  it('should round the purchase amount to cents before persisting', () => {
+  it('should round the purchase amount to cents before persisting', async () => {
     const repository = new FakePurchaseRepository();
     const useCase = new CreatePurchaseUseCase(
       repository,
@@ -62,7 +62,7 @@ describe('CreatePurchaseUseCase', () => {
       new FakeClock(),
     );
 
-    const result = useCase.execute({
+    const result = await useCase.execute({
       description: 'Office supplies',
       transactionDate: '2026-05-23',
       purchaseAmountUsd: '125.495',
