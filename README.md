@@ -1,4 +1,4 @@
-# WEX Purchase Currency Conversion API
+# Purchase Currency Conversion API
 
 A production-oriented, high-quality backend service built with NestJS, TypeScript, and PostgreSQL. It stores purchase transactions in United States Dollars (USD) and retrieves them converted to other target currencies supported by the US Treasury Reporting Rates of Exchange API.
 
